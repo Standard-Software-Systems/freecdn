@@ -213,14 +213,22 @@ app.post('/backend/update/folder/:userid', async function(req, res) {
     if(loggedIn) {
         if(req.params.userid == req.session.passport.user.userid) {
             if(!req.body.input) return res.redirect('/backend/folderfind');
-            req.body.input = req.body.input.replaceAll(" ", "").replaceAll("`", "");
+            req.body.input = req.body.input.replaceAll(" ", "").replaceAll("`", "").toLowerCase();
             for(let char of forbidden) {
                 req.body.input = req.body.input.replaceAll(`${char}`, ``)
             };
-            await con.query(`UPDATE users SET folder="${req.body.input}" WHERE userid="${req.session.passport.user.userid}"`, async function(err, row) {
+            await con.query(`SELECT * FROM users WHERE userid="${req.session.passport.user.userid}"`, async (err, row) => {
                 if(err) throw err;
+                let user = row[0];
+                if(existsSync(`./public/u/${req.body.input}`)) {
+                    res.render('error.ejs', { error: `Folder already exists...` })
+                };
+                renameSync(`./public/u/${user.folder}`, `./public/u/${req.body.input}`);
+                await con.query(`UPDATE users SET folder="${req.body.input}" WHERE userid="${req.session.passport.user.userid}"`, async function(err, row) {
+                    if(err) throw err;
+                });
+                return res.redirect('/backend/folderfind');
             });
-            return res.redirect('/backend/folderfind');
         } else {
             return res.redirect('/backend/folderfind');
         };
@@ -346,7 +354,7 @@ app.get('*', function(req, res){
 });
 
 // Main Logger Event
-logger.hypelogger(`ImageEngine`, '500', 'magenta', `Domain: ${chalk.magenta(config.domain)}\nPort: ${chalk.magenta(config.port)}\n\nAuthor: ${chalk.magenta('Hyperz#0001')}`, 'disabled', 'magenta', 'single', true)
+logger.hypelogger(`ImageEngine`, '500', 'magenta', `Domain: ${chalk.magenta(config.domain)}\nPort: ${chalk.magenta(config.port)}\n\nAuthor: ${chalk.magenta('Standard Software Systems')}`, 'disabled', 'magenta', 'single', true)
 backend.botInit(con);
 
 // Port Listening

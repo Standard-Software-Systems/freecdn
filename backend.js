@@ -7,9 +7,7 @@ const axios = require('axios');
 const { readdirSync, unlinkSync, rmSync, renameSync, mkdirSync, existsSync, statSync, fstat } = require('fs');
 const { join } = require('path');
 const fastFolderSizeSync = require('fast-folder-size/sync');
-const pjson = require('./package.json');
 const converter = require('byte-converter').converterBase2;
-require('hyperz-verbatim').setExtension('.hyperz');
 let client;
 
 // Domain Setup Changes

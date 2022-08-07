@@ -3,15 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
-    <meta name="theme-color" content="#0C1017">
-    <meta property="og:url" content="<%= config.domain %>">
-    <meta property="og:title" content="<%= config.seoSettings.title %>">
-    <meta property="og:description" content="<%= config.seoSettings.description %>">
-    <meta property="og:image" content="<%= config.seoSettings.imageURL %>">
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Exo:500,500italic,700,700italic,400,400italic,600,600italic,900,900italic">
     <link rel="shortcut icon" href="<%= config.seoSettings.imageURL %>">
     <link rel="stylesheet" href="css/main.css">
-    <title>404 - Page Not Found</title>
+    <title>Error Generated</title>
     <style>
         body {
             background-color: #1c1c1c;
@@ -48,8 +43,8 @@
 </head>
 <body>
 
-<p class="item1" align=center>404</p>
-<p class="item2" align=center>Page Not Found</p>
+<p class="item1" align=center>Error</p>
+<p class="item2" align=center><%= error %></p>
 
 </body>
 </html>
