@@ -1,0 +1,183 @@
+<% 
+    let image1 = images[0];
+    let image2 = images[1];
+    let image3 = images[2];
+    images = images.slice(3);
+    let cols = 3;
+    images.inColumns = function (count) {
+        return this.reduce((r, v, i) => ((r[i % count] = r[i % count] || []).push(v), r), []);
+    }
+    images = images.inColumns(cols);
+%>
+<!DOCTYPE html>
+<html lang="en">
+<%- include('_header', { backend: backend, config: config, con: con, loggedIn: loggedIn }); %>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <meta name="theme-color" content="#0C1017">
+    <meta property="og:url" content="<%= config.domain %>">
+    <meta property="og:title" content="<%= config.seoSettings.title %>">
+    <meta property="og:description" content="<%= config.seoSettings.description %>">
+    <meta property="og:image" content="<%= config.seoSettings.imageURL %>">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Exo:500,500italic,700,700italic,400,400italic,600,600italic,900,900italic">
+    <link rel="shortcut icon" href="<%= config.seoSettings.imageURL %>">
+    <link rel="stylesheet" href="css/main.css">
+    <title><%= user.tag %>'s Drive</title>
+</head>
+<body>
+    <h1 style="font-size: 2em;">You're viewing <a href="https://discord.com/users/<%= user.id %>"><%= user.tag %></a>'s ImageEngine</h1>
+    <br>
+    <div class="container">
+        <div class="justify-content-center mx-auto">
+            <div class="col d-block mb-3 mx-auto">
+                <div class="card text-white bg-primary mx-auto" style="max-width: 18rem;">
+                    <% if(notExceeding) { %>
+                        <div class="card-body bg-dark">
+                        <p class="card-text text-center"><%= currentUsed.toLocaleString() %> / <%= config.maxFolderSize.toLocaleString() %> MB</p>
+                        </div>
+                    <% } else { %>
+                        <div class="card-body bg-danger">
+                            <p class="card-text text-center"><%= currentUsed.toLocaleString() %> / <%= config.maxFolderSize.toLocaleString() %> MB</p>
+                        </div>
+                    <% } %>
+                    <div class="card-body">
+                        <h5 class="card-title text-center"><%= user.username %> Image Count</h5>
+                        <p class="card-text text-center"><%= count.toLocaleString() %></p>
+                    </div>
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-center">Options</h5>
+                        <form method="post" action="/backend/update/folder/<%= user.id %>">
+                            <div class="row">
+                                <div class="col">
+                                    <input type="text" class="form-control" name="input" placeholder="Folder" value="<%= folder.replaceAll('/', '').replace('u', '') %>">
+                                </div>
+                                <div class="col">
+                                    <button type="submit" class="btn btn-primary">Save Folder</button>
+                                </div>
+                            </div>
+                        </form>
+                        <br>
+                        <form method="post" action="/backend/update/webhook/<%= user.id %>">
+                            <div class="row">
+                                <div class="col">
+                                    <input type="password" class="form-control" name="input" placeholder="Webhook URL" value="<%= usercon.webhook %>">
+                                </div>
+                                <div class="col">
+                                    <button type="submit" class="btn btn-warning">Save Webhook</button>
+                                </div>
+                            </div> 
+                        </form>
+                        <br>
+                        <a class="btn btn-danger" href="/backend/secret/reset/<%= user.id %>">Reset Secret</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <% if(loggedIn && isMyFolder) { %>
+        <% if(count > 6) { %>
+            <div class="container d-sm-none d-md-block" style="padding-top: 1em;">
+                <div class="row text-center">
+                    <div class="col">
+                        <% if(image1) { %>
+                            <div class="card bg-dark imgcard">
+                                <img src="<%= folder + image1.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                <div class="card-body">
+                                    <a href="<%= folder + image1.filename %>" class="btn btn-primary" target="_blank">View Image</a>
+                                    <a href="/backend/delete/<%= user.id %>/<%= image1.filename %>" class="btn btn-danger" >Remove</a>
+                                </div>
+                            </div>
+                        <% } else { %>
+                            <div class="card bg-dark imgcard">
+                                <img src="<%= folder %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                <div class="card-body">
+                                    <a href="<%= folder %>" class="btn btn-primary" target="_blank">View Image</a>
+                                    <a href="/backend/delete/<%= user.id %>/<%= img.filename %>" class="btn btn-danger" >Remove</a>
+                                </div>
+                            </div>
+                        <% } %>
+                        <% if(images[0]) { %>
+                            <% images[0].forEach((img) => { %>
+                                <div class="card bg-dark imgcard" >
+                                    <img src="<%= folder + img.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                    <div class="card-body">
+                                        <a href="<%= folder + img.filename %>" class="btn btn-primary" target="_blank">View Image</a>
+                                        <a href="/backend/delete/<%= user.id %>/<%= img.filename %>" class="btn btn-danger" >Remove</a>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } %>
+                    </div>
+                    <div class="col">
+                        <% if(image2) { %>
+                            <div class="card bg-dark imgcard">
+                                <img src="<%= folder + image2.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                <div class="card-body">
+                                    <a href="<%= folder + image2.filename %>" class="btn btn-primary" target="_blank">View Image</a>
+                                    <a href="/backend/delete/<%= user.id %>/<%= image2.filename %>" class="btn btn-danger" >Remove</a>
+                                </div>
+                            </div>
+                        <% } else { %>
+                            <div class="card bg-dark imgcard">
+                                <img src="<%= folder %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                <div class="card-body">
+                                    <a href="<%= folder %>" class="btn btn-primary" target="_blank">View Image</a>
+                                    <a href="/backend/delete/<%= user.id %>/<%= img.filename %>" class="btn btn-danger" >Remove</a>
+                                </div>
+                            </div>
+                        <% } %>
+                        <% if(images[1]) { %>
+                            <% images[1].forEach((img) => { %>
+                                <div class="card bg-dark imgcard" >
+                                    <img src="<%= folder + img.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                    <div class="card-body">
+                                        <a href="<%= folder + img.filename %>" class="btn btn-primary" target="_blank">View Image</a>
+                                        <a href="/backend/delete/<%= user.id %>/<%= img.filename %>" class="btn btn-danger" >Remove</a>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } %>
+                    </div>
+                    <div class="col">
+                        <% if(image3) { %>
+                            <div class="card bg-dark imgcard">
+                                <img src="<%= folder + image3.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                <div class="card-body">
+                                    <a href="<%= folder + image3.filename %>" class="btn btn-primary" target="_blank">View Image</a>
+                                    <a href="/backend/delete/<%= user.id %>/<%= image3.filename %>" class="btn btn-danger" >Remove</a>
+                                </div>
+                            </div>
+                        <% } else { %>
+                            <div class="card bg-dark imgcard">
+                                <img src="<%= folder %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                <div class="card-body">
+                                    <a href="<%= folder %>" class="btn btn-primary" target="_blank">View Image</a>
+                                    <a href="/backend/delete/<%= user.id %>/<%= image3.filename %>" class="btn btn-danger" >Remove</a>
+                                </div>
+                            </div>
+                        <% } %>
+                        <% if(images[2]) { %>
+                            <% images[2].forEach((img) => { %>
+                                <div class="card bg-dark imgcard" >
+                                    <img src="<%= folder + img.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                    <div class="card-body">
+                                        <a href="<%= folder + img.filename %>" class="btn btn-primary" target="_blank">View Image</a>
+                                        <a href="/backend/delete/<%= user.id %>/<%= img.filename %>" class="btn btn-danger" >Remove</a>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        <% } else { %>
+            <div class="container bg-dark text-center text-white">
+                <p>Please try uploading more images...</p>
+            </div>
+        <% } %>
+    <% } %>
+    <%- include('_footer'); %>
+</body>
+</html>

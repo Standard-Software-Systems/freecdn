@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('_header', { backend: backend, config: config, con: con, loggedIn: loggedIn }); %>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <meta name="theme-color" content="#0C1017">
+    <meta property="og:url" content="<%= config.domain %>">
+    <meta property="og:title" content="<%= config.seoSettings.title %>">
+    <meta property="og:description" content="<%= config.seoSettings.description %>">
+    <meta property="og:image" content="<%= config.seoSettings.imageURL %>">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Exo:500,500italic,700,700italic,400,400italic,600,600italic,900,900italic">
+    <link rel="shortcut icon" href="<%= config.seoSettings.imageURL %>">
+    <link rel="stylesheet" href="css/main.css">
+    <title>FreeCDN</title>
+</head>
+<body>
+    <h1>👋 Hey There!</h1>
+    <p>To get started with FreeCDN and get to uploading, feel free to check out <a href="/docs">our documentation</a>!</p>
+    <div class="container text-center">
+        <div class="justify-content-center mx-auto">
+            <div class="col d-block mb-3 mx-auto">
+                <div class="card text-white bg-primary mx-auto" style="max-width: 18rem;">
+                    <div class="card-body">
+                      <h5 class="card-title text-center">Overall Stored Files</h5>
+                      <p class="card-text text-center"><%= count.toLocaleString() %></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br>
+        <a class="btn btn-outline-primary viewfolderbutton" href="/backend/folderfind">View My Folder</a>
+    </div>
+    <%- include('_footer'); %>
+</body>
+</html>
