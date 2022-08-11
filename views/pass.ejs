@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="shortcut icon" href="/assets/logo.png">
+    <%- include('_header', { backend: backend, config: config, con: con, loggedIn: loggedIn }); %>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <meta name="theme-color" content="#0C1017">
+    <meta property="og:url" content="<%= config.domain %>">
+    <meta property="og:title" content="<%= config.seoSettings.title %>">
+    <meta property="og:description" content="<%= config.seoSettings.description %>">
+    <meta property="og:image" content="/assets/logo.png">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Exo:500,500italic,700,700italic,400,400italic,600,600italic,900,900italic">
+    <link rel="stylesheet" href="/css/main.css">
+    <title>FreeCDN</title>
+</head>
+<body>
+    <h1><%= name %> is Password protected</h1>
+    <div class="container text-center">
+        <div class="row justify-content-center">
+                <div class="block-heading">
+                    <p></p>
+                </div>
+                <style>
+                    .up {
+                        margin-left: -5%;
+                    }
+                </style>
+                <form method="post" encType="multipart/form-data" action="/pass/download">
+                    <div class="col-sm-6 mb-3 mb-sm-0">
+                        <input type="password" placeholder="File Password" name="password" class="up" class="form-control form-control-user" >
+                        <input type="text" hidden value="<%= id %>" name="id" class="form-control form-control-user" >
+                        <input type="text" hidden value="<%= folder %>" name="folder" class="form-control form-control-user" >
+                    </div>
+                    
+                    <button class="btn btn-primary" type="submit" name="file" style="margin: auto;display: grid;">Upload</a>
+                </form>
+        </div>
+        <br>
+        <a class="btn btn-outline-primary viewfolderbutton" href="/backend/folderfind">View My Folder</a>
+    </div>
+    <%- include('_footer'); %>
+</body>
+</html>
