@@ -70,8 +70,9 @@
                             </div>
                         </form>
                         <br>
-                        <p class="text-center text-white secret"><%= secret %></p>
+                        <p class="text-center text-white secret" id="token"><%= secret %></p>
                         <a class="btn btn-danger" href="/backend/secret/reset/<%= user.id %>">Reset Secret</a>
+                        <button class="btn btn-primary" onClick="copyClip()">Copy Secret</button>
                     </div>
                 </div>
             </div>
@@ -180,5 +181,16 @@
         <% } %>
     <% } %>
     <%- include('_footer'); %>
+    <script>
+        function copyClip() {
+            /* Get the text field */
+            var copyText = document.getElementById("token");
+            /* Copy the text inside the text field */
+            navigator.clipboard.writeText(copyText.textContent);
+            /* Alert the copied text */
+            alert("Secret copied to clipboard!");
+        };
+    </script>
+
 </body>
 </html>
