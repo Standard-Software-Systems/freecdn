@@ -24,14 +24,14 @@ const config = {
     webhook: {
         url: "", // The global webhook for all new images (leave empty to disable)
         username: "FreeCDN", //The username for the webhook
-        avatarURL: "https://store.hyperz.net/assets/logo.png" // The image URL for the webhooks avatar
+        avatarURL: "https://cdn.hyperz.net/u/main/og0ysds.png" // The image URL for the webhooks avatar
     },
 
     // SEO Settings
     seoSettings: {
         title: "FreeCDN", // The title of the website
         description: "FreeCDN is an open-source image sharing server that allows you to upload screenshots quickly, it was created by Standard Software Systems!", // The description of the website
-        imageURL: "https://store.hyperz.net/assets/logo.png" // The image URL for the website
+        imageURL: "https://cdn.hyperz.net/u/main/og0ysds.png" // The image URL for the website
     },
 
     // Other Settings
