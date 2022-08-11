@@ -89,10 +89,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <% sql.forEach(function (data){ %> 
+                    <% let num = 0 %> 
+                    <% sql.forEach(function (data){ num = num + 1%> 
                     <tr class="downloads">
                         <td><%= data.name %> </td>
-                        <td><a href="/download/<%= folder %>/<%= data.url %> ">Download</a></td>
+                        <td><a href="<%= config.domain %>/download/<%= folder %>/<%= data.url %>">Download</a> (<button class="btn-primary" onClick="copyLink(<%= num %>)">Copy Link</button>)<p id="link-<%= num %>" hidden><%= config.domain %>/download/<%= folder %>/<%= data.url %></p></td>
                         <td><%= data.amount %> </td>
                     </tr>
                     <% }) %>
@@ -209,6 +210,15 @@
             navigator.clipboard.writeText(copyText.textContent);
             /* Alert the copied text */
             alert("Secret copied to clipboard!");
+        };
+
+        function copyLink(num) {
+            /* Get the text field */
+            var copyText = document.getElementById(`link-${num}`);
+            /* Copy the text inside the text field */
+            navigator.clipboard.writeText(copyText.textContent);
+            /* Alert the copied text */
+            alert("Link copied to clipboard!");
         };
     </script>
 
