@@ -89,6 +89,7 @@ app.use(bodyParser.urlencoded({
 app.use('/css', express.static(__dirname + 'public/css'))
 app.use('/js', express.static(__dirname + 'public/js'))
 app.use('/u', express.static(__dirname + 'public/u'))
+app.use('/assets', express.static(__dirname + 'public/assets'))
 
 // Set View's
 app.set('views', './views');
