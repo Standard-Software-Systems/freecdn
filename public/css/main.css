@@ -57,6 +57,15 @@ footer {
     text-align: center;
 }
 
+.secret {
+    filter: blur(5px);
+    transition: filter .1s ease-in-out;
+}
+
+.secret:hover {
+    filter: blur(0px);
+}
+
 .navbar {
     font-size: 1.2em !important;
 }

@@ -363,7 +363,7 @@ app.get('/:folder', async function (req, res) {
                 let usedUp = await backend.dirSize(`./public/u/${folder}`, { returnFinal: true });
                 let hmmm = await backend.dirSize(`./public/u/${folder}`, { returnFinal: false });
                 let f = `u/${folder}/`
-                res.render('folder.ejs', { backend: backend, config: config, con: con, count: bruh, user: u, currentUsed: usedUp, notExceeding: hmmm, loggedIn: loggedIn, images: images.reverse(), isMyFolder: isMyFolder, folder: f, webhook: usercon.webhook })
+                res.render('folder.ejs', { backend: backend, config: config, con: con, secret: usercon.secret, count: bruh, user: u, currentUsed: usedUp, notExceeding: hmmm, loggedIn: loggedIn, images: images.reverse(), isMyFolder: isMyFolder, folder: f, webhook: usercon.webhook })
             });
         });
     } else {

@@ -67,9 +67,10 @@
                                 <div class="col">
                                     <button type="submit" class="btn btn-warning">Save Webhook</button>
                                 </div>
-                            </div> 
+                            </div>
                         </form>
                         <br>
+                        <p class="text-center text-white secret"><%= secret %></p>
                         <a class="btn btn-danger" href="/backend/secret/reset/<%= user.id %>">Reset Secret</a>
                     </div>
                 </div>
@@ -174,7 +175,7 @@
             </div>
         <% } else { %>
             <div class="container text-center text-white" style="padding: 1em; border-radius: 1em; font-size: 2em; background-color: #161B22">
-                <p>Please try uploading more images...</p>
+                <p>Please try uploading <%= 7 - count %> more images...</p>
             </div>
         <% } %>
     <% } %>
