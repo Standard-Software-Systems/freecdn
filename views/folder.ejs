@@ -51,7 +51,7 @@
                         <form method="post" action="/backend/update/folder/<%= user.id %>">
                             <div class="row">
                                 <div class="col">
-                                    <input type="text" class="form-control" name="input" placeholder="Folder" value="<%= folder.replaceAll('/', '').replace('u', '') %>">
+                                    <input type="text" class="form-control" name="input" placeholder="Folder" value="<%= folder.replaceAll('/', '').replace('u', '') %>" required>
                                 </div>
                                 <div class="col">
                                     <button type="submit" class="btn btn-primary">Save Folder</button>
@@ -62,7 +62,7 @@
                         <form method="post" action="/backend/update/webhook/<%= user.id %>">
                             <div class="row">
                                 <div class="col">
-                                    <input type="password" class="form-control" name="input" placeholder="Webhook URL" value="<%= usercon.webhook %>">
+                                    <input type="password" class="form-control" name="input" placeholder="Webhook URL" value="<%= webhook %>">
                                 </div>
                                 <div class="col">
                                     <button type="submit" class="btn btn-warning">Save Webhook</button>
@@ -173,7 +173,7 @@
                 </div>
             </div>
         <% } else { %>
-            <div class="container bg-dark text-center text-white">
+            <div class="container text-center text-white" style="padding: 1em; border-radius: 1em; font-size: 2em; background-color: #161B22">
                 <p>Please try uploading more images...</p>
             </div>
         <% } %>

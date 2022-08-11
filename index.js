@@ -15,6 +15,7 @@ const storage = multer.memoryStorage()
 const upload = multer({ dest: './public/files', storage: storage });
 const config = require('./config.js');
 const backend = require('./backend.js');
+const bodyParser = require('body-parser');
 let con;
 let forbidden = ['/', '<', '>', ':', '"', '\'', '|', '?', '*'];
 
@@ -22,7 +23,7 @@ const { createConnection } = require('mysql') // Imports SQL Module
 con = createConnection(config.database) // Defines Con Var
 setTimeout(() => {
     console.log('MySQL Successfully Connected!')
-}, 4000); setTimeout(() => { backend.init() }, 3000);
+}, 4000);
 
 let d;
 if(config.domain.endsWith('/')) {
@@ -48,11 +49,26 @@ passport.use(
         }, async function(accessToken, refreshToken, profile, done) {
             try {
                 await con.query(`SELECT * FROM users WHERE userid='${profile?.id}'`, async function(err, row) {
-                    if(err) throw err;
+                    if(err) console.log(err);
                     if(row[0]) {
                         return done(null, row[0]);
                     } else {
-                        return done('You do not have access to image engine!', null);
+                        let folderName = profile?.id;
+                        if(fs.existsSync(`./public/u/${folderName}`)) {
+                            folderName = await backend.makeid(12);
+                        };
+                        let length = 28;
+                        let cookie           = '';
+                        let characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                        let charactersLength = characters.length;
+                        for ( let i = 0; i < length; i++ ) {
+                            cookie += characters.charAt(Math.floor(Math.random() * charactersLength));
+                        }
+                        let secret = await backend.makeId(12);
+                        await con.query(`INSERT INTO users (userid, secret, folder, webhook, cookie, admin) VALUES ("${profile?.id}", "${secret}", "${profile?.id}", "none", "${cookie}", false)`, async (err, row) => {
+                            if(err) throw err;
+                        });
+                        fs.mkdirSync(`./public/u/${folderName}`, { recursive: true });
                     };
                 });
             } catch(e) {
@@ -67,6 +83,9 @@ passport.use(
 app.use(express.static('public'));
 app.use(express.json());
 app.use(cookieParser())
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
 app.use('/css', express.static(__dirname + 'public/css'))
 app.use('/js', express.static(__dirname + 'public/js'))
 app.use('/u', express.static(__dirname + 'public/u'))
@@ -173,19 +192,11 @@ app.get('/auth/discord/callback', passport.authenticate('discord'), async (req, 
             await con.query(`INSERT INTO users (userid, secret, folder, webhook, cookie, admin) VALUES ("${req.session.passport.user.userid}", "${secret}", "${req.session.passport.user.userid}", "none", "${cookie}", false)`, async (err, row) => {
                 if(err) throw err;
             });
-            if(typeof folderName != undefined) {
-                res.redirect(`/${folderName}`)
-            } else {
-                res.redirect('/')
-            };
+            await fs.mkdirSync(`./public/u/${folderName}`, { recursive: true });
         } else {
             await con.query(`UPDATE users SET cookie="${cookie}" WHERE userid='${req.session.passport.user.userid}'`, async (err, row) => {
                 if(err) throw err;
-                if(typeof folderName != undefined) {
-                    res.redirect(`/${folderName}`)
-                } else {
-                    res.redirect('/')
-                };
+                res.redirect('/')
             });
         };
     });
@@ -194,15 +205,20 @@ app.get('/auth/discord/callback', passport.authenticate('discord'), async (req, 
 app.get('/backend/secret/reset/:userid', async function(req, res) {
     let loggedIn = await backend.loggedIn(req);
     if(loggedIn) {
-        if(req.params.userid == req.session.passport.user.userid) {
-            let secret = await backend.makeId(12);
-            await con.query(`UPDATE users SET secret="${secret}" WHERE userid="${req.session.passport.user.userid}"`, async function(err, row) {
-                if(err) throw err;
-            });
-            return res.redirect('/backend/folderfind');
-        } else {
-            return res.redirect('/backend/folderfind');
-        };
+        let cookie = req?.cookies?.connect;
+        await con.query(`SELECT * FROM users WHERE cookie="${cookie}"`, async (err, row) => {
+            if(err) throw err;
+            let user = row[0];
+            if(req.params.userid == user.userid) {
+                let secret = await backend.makeId(12);
+                await con.query(`UPDATE users SET secret="${secret}" WHERE userid="${user.userid}"`, async function(err, row) {
+                    if(err) throw err;
+                });
+                return res.redirect('/backend/folderfind');
+            } else {
+                return res.redirect('/backend/folderfind');
+            };
+        });
     } else {
         return res.redirect('/');
     };
@@ -211,27 +227,28 @@ app.get('/backend/secret/reset/:userid', async function(req, res) {
 app.post('/backend/update/folder/:userid', async function(req, res) {
     let loggedIn = await backend.loggedIn(req);
     if(loggedIn) {
-        if(req.params.userid == req.session.passport.user.userid) {
-            if(!req.body.input) return res.redirect('/backend/folderfind');
-            req.body.input = req.body.input.replaceAll(" ", "").replaceAll("`", "").toLowerCase();
-            for(let char of forbidden) {
-                req.body.input = req.body.input.replaceAll(`${char}`, ``)
-            };
-            await con.query(`SELECT * FROM users WHERE userid="${req.session.passport.user.userid}"`, async (err, row) => {
-                if(err) throw err;
-                let user = row[0];
-                if(existsSync(`./public/u/${req.body.input}`)) {
+        let cookie = req?.cookies?.connect;
+        await con.query(`SELECT * FROM users WHERE cookie="${cookie}"`, async (err, row) => {
+            if(err) throw err;
+            let user = row[0];
+            if(req.params.userid == user.userid) {
+                if(!req.body.input) return res.redirect('/backend/folderfind');
+                req.body.input = req.body.input.replaceAll(" ", "").replaceAll("`", "").toLowerCase();
+                for(let char of forbidden) {
+                    req.body.input = req.body.input.replaceAll(`${char}`, ``)
+                };
+                if(fs.existsSync(`./public/u/${req.body.input}`)) {
                     res.render('error.ejs', { error: `Folder already exists...` })
                 };
-                renameSync(`./public/u/${user.folder}`, `./public/u/${req.body.input}`);
-                await con.query(`UPDATE users SET folder="${req.body.input}" WHERE userid="${req.session.passport.user.userid}"`, async function(err, row) {
+                fs.renameSync(`./public/u/${user.folder}`, `./public/u/${req.body.input}`);
+                await con.query(`UPDATE users SET folder="${req.body.input}" WHERE userid="${user.userid}"`, async function(err, row) {
                     if(err) throw err;
                 });
                 return res.redirect('/backend/folderfind');
-            });
-        } else {
-            return res.redirect('/backend/folderfind');
-        };
+            } else {
+                return res.redirect('/backend/folderfind');
+            };
+        });
     } else {
         return res.redirect('/');
     };
@@ -240,16 +257,21 @@ app.post('/backend/update/folder/:userid', async function(req, res) {
 app.post('/backend/update/webhook/:userid', async function(req, res) {
     let loggedIn = await backend.loggedIn(req);
     if(loggedIn) {
-        if(req.params.userid == req.session.passport.user.userid) {
-            if(!req?.body?.input) req.body.input = 'none';
-            req.body.input = req.body.input.replaceAll("`", "").replaceAll("'", "").replaceAll('"', '');
-            await con.query(`UPDATE users SET webhook="${req.body.input || 'none'}" WHERE userid="${req.session.passport.user.userid}"`, async function(err, row) {
-                if(err) throw err;
-            });
-            return res.redirect('/backend/folderfind');
-        } else {
-            return res.redirect('/backend/folderfind');
-        };
+        let cookie = req?.cookies?.connect;
+        await con.query(`SELECT * FROM users WHERE cookie="${cookie}"`, async (err, row) => {
+            if(err) throw err;
+            let user = row[0];
+            if(req.params.userid == user.userid) {
+                if(!req?.body?.input) req.body.input = 'none';
+                req.body.input = req.body.input.replaceAll("`", "").replaceAll("'", "").replaceAll('"', '');
+                await con.query(`UPDATE users SET webhook="${req.body.input || 'none'}" WHERE userid="${user.userid}"`, async function(err, row) {
+                    if(err) throw err;
+                });
+                return res.redirect('/backend/folderfind');
+            } else {
+                return res.redirect('/backend/folderfind');
+            };
+        });
     } else {
         return res.redirect('/');
     };
@@ -354,8 +376,7 @@ app.get('*', function(req, res){
 });
 
 // Main Logger Event
-logger.hypelogger(`ImageEngine`, '500', 'magenta', `Domain: ${chalk.magenta(config.domain)}\nPort: ${chalk.magenta(config.port)}\n\nAuthor: ${chalk.magenta('Standard Software Systems')}`, 'disabled', 'magenta', 'single', true)
-backend.botInit(con);
+logger.hypelogger(`FreeCDN`, '500', 'magenta', `Domain: ${chalk.magenta(config.domain)}\nPort: ${chalk.magenta(config.port)}\n\nAuthor: ${chalk.magenta('Standard Software Systems')}`, 'disabled', 'magenta', 'single', true)
 
 // Port Listening
 app.listen(config.port)

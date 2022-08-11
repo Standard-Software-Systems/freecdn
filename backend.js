@@ -8,7 +8,12 @@ const { readdirSync, unlinkSync, rmSync, renameSync, mkdirSync, existsSync, stat
 const { join } = require('path');
 const fastFolderSizeSync = require('fast-folder-size/sync');
 const converter = require('byte-converter').converterBase2;
-let client;
+const client = new Discord.Client({
+    intents: ['GUILDS', 'GUILD_MESSAGES', "GUILD_MESSAGE_REACTIONS", "DIRECT_MESSAGES", "GUILD_MEMBERS", "GUILD_BANS", "GUILD_INTEGRATIONS", "GUILD_WEBHOOKS", "GUILD_INVITES", "GUILD_VOICE_STATES", "GUILD_PRESENCES", "GUILD_MESSAGE_TYPING", "DIRECT_MESSAGE_REACTIONS", "DIRECT_MESSAGE_TYPING"],
+    partials: ["CHANNEL", "MESSAGE", "REACTIONS"],
+    allowedMentions: { parse: ['users', 'roles', 'everyone'], repliedUser: true }
+});
+client.login(config.tokens.token)
 
 // Domain Setup Changes
 let d;

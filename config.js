@@ -1,9 +1,9 @@
 const config = {
 
     // Main Website Settings
-    port: "3000",
-    domain: "http://localhost:3000",
-    debugmode: false,
+    port: "3059",
+    domain: "https://freecdn.lol",
+    debugmode: true,
 
     // MySQL Settings
     database: {
@@ -15,8 +15,9 @@ const config = {
 
     // Website OAuth2 Tokens
     tokens: {
-        clientID: "",
-        clientSecret: ""
+        token: "BOT_TOKEN",
+        clientID: "CLIENT_ID",
+        clientSecret: "CLIENT_SECRET"
     },
 
     // Webhook Settings
@@ -29,7 +30,7 @@ const config = {
     // SEO Settings
     seoSettings: {
         title: "FreeCDN", // The title of the website
-        description: "FreeCDN is an open-source image sharing server that allows you to upload screenshots quickly to a custom domain, it was created by Standard Software Systems!", // The description of the website
+        description: "FreeCDN is an open-source image sharing server that allows you to upload screenshots quickly, it was created by Standard Software Systems!", // The description of the website
         imageURL: "https://store.hyperz.net/assets/logo.png" // The image URL for the website
     },
 
