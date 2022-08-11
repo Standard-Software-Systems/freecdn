@@ -98,11 +98,14 @@ app.set('view engine', 'ejs');
 // Navigation (add pages here)
 app.get('', async (req, res) => {
     let loggedIn = await backend.loggedIn(req);
-    await con.query(`SELECT COUNT(*) as total FROM images`, async (err, row) => {
+    await con.query(`SELECT * FROM images`, async (err, row) => {
         if(err) throw err;
-        let c = row[0]?.total || 0;
-        c = c.toLocaleString();
-        res.render('index.ejs', { backend: backend, config: config, con: con, count: c, loggedIn: loggedIn })
+        let c = row.length || 0;
+        await con.query(`SELECT * FROM users`, async (err, row) => {
+            if(err) throw err;
+            let u = row.length || 0;
+            res.render('index.ejs', { backend: backend, config: config, con: con, count: c, users: u, loggedIn: loggedIn })
+        });
     });
 });
 
