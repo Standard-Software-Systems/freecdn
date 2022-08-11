@@ -62,7 +62,7 @@ footer {
     transition: filter .1s ease-in-out;
 }
 
-.secret:hover {
+.secret:hover, .secret:focus {
     filter: blur(0px);
 }
 
