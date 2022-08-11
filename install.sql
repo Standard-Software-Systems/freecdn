@@ -12,3 +12,11 @@ CREATE TABLE images (
     fileid TEXT,
     filename TEXT
 );
+CREATE TABLE downloads (
+  id int NOT NULL,
+  user text NOT NULL,
+  url text NOT NULL,
+  amount int NOT NULL,
+  name text NOT NULL,
+  password text
+);

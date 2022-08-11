@@ -79,6 +79,26 @@
         </div>
     </div>
     <% if(loggedIn && isMyFolder) { %>
+        <div class="container d-sm-none d-md-block" style="padding-top: 1em;">
+            <table class="table">
+                <thead>
+                    <tr class="downloads">
+                        <th>File Name</th>
+                        <th>Download Link</th>
+                        <th>Downloads</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% sql.forEach(function (data){ %> 
+                    <tr class="downloads">
+                        <td><%= data.name %> </td>
+                        <td><a href="/download/<%= folder %>/<%= data.url %> ">Download</a></td>
+                        <td><%= data.amount %> </td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
         <% if(count > 6) { %>
             <div class="container d-sm-none d-md-block" style="padding-top: 1em;">
                 <div class="row text-center">
