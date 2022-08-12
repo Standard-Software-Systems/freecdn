@@ -27,14 +27,17 @@
                         margin-left: -5%;
                     }
                 </style>
-                <form method="post" encType="multipart/form-data" action="/pass/download">
+                <form method="post" encType="multipart/form-data" action="/pass/download/<%= folder %>/<%= id %>">
                     <div class="col-sm-6 mb-3 mb-sm-0">
                         <input type="password" placeholder="File Password" name="password" class="up" class="form-control form-control-user" >
                         <input type="text" hidden value="<%= id %>" name="id" class="form-control form-control-user" >
                         <input type="text" hidden value="<%= folder %>" name="folder" class="form-control form-control-user" >
                     </div>
-                    
-                    <button class="btn btn-primary" type="submit" name="file" style="margin: auto;display: grid;">Upload</a>
+                    <br>
+                    <% if(msg != "") { %>
+                        <p><%= msg %></p>
+                    <% }; %>
+                    <button class="btn btn-primary" type="submit" name="file" style="margin: auto;display: grid;">Download</a>
                 </form>
         </div>
         <br>
