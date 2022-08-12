@@ -127,7 +127,7 @@ app.get('/backend/config/download/:userid/:secret', async function(req, res) {
             "Name": "FreeCDN",
             "DestinationType": "ImageUploader, FileUploader",
             "RequestMethod": "POST",
-            "RequestURL": "https://freecdn.lol/upload",
+            "RequestURL": `${config.domain}/upload`,
             "Body": "MultipartFormData",
             "Arguments": {
               "userid": userid,
