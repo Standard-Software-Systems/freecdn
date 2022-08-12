@@ -148,131 +148,111 @@ app.get('/backend/config/download/:userid/:secret', async function(req, res) {
 
 app.get('/upload/file', async function(req, res) {
     let loggedIn = await backend.loggedIn(req);
-    // let u = await backend.fetchUser(row[0].userid);
     res.render('upload', { backend: backend, config: config, con: con, loggedIn: loggedIn })
 });
 
 app.post('/upload/file', async function(req, res) {
-    // req.user = {
-    //     id: "231654546568768456"
-    // }
-    // console.log(req)
-    // let user = row[0];
-
-    // let notExceeding = await backend.dirSize(`./downloads/${user.folder}`, { returnFinal: false });
-    // console.log(req)
-    if (!req.cookie) res.redirect('/')
+    if (!req?.cookies?.connect) return res.redirect('/');
     let user;
     await con.query(`SELECT * FROM users WHERE cookie="${req?.cookies?.connect}"`, async (err, row) => {
-        if (!row[0]) return
+        if(!row[0]) return;
         user = row[0]
-
-
-
-    let characters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '0', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_']
-
-    let keyGenerator = function() {
-        let key = "";
-        for (let i = 0; i < 10; i++) {
-            key += `${characters[Math.floor(Math.random() * characters.length)]}`;
+        let characters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '0', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_']
+        let keyGenerator = function() {
+            let key = "";
+            for (let i = 0; i < 10; i++) {
+                key += `${characters[Math.floor(Math.random() * characters.length)]}`;
+            };
+            return key;
         };
-        return key;
-    };
-    try {
-        if(!req.files) {
-            res.status(400).send({
-                status: 400,
-                message: 'No file uploaded'
-            });
-        } else {
-
-            if (!req.body.password){
-                req.body.password = null
-            }
-            
-
-            //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
-            let file = req.files.file;
-            let key = await keyGenerator();
-            let name = `${key}-${file.name}`
-            //Use the mv() method to place the file in upload directory (i.e. "uploads")
-            file.mv(`./downloads/${user.folder}/` + name);
-            con.query(`SELECT * FROM downloads WHERE  user=${user.folder}`, function(err, sql){
-                let id = sql.length + 1;
-                if (req.body.password !== null) {
-                    bcrypt.hash(req.body.password, 10, (err, hash) => {
-                        con.query(`INSERT INTO downloads (id, user, url, amount, name, password) VALUE  ('${id}', '${user.folder}', '${name}', '0', '${file.name}', '${hash}')`)
-                        // res.redirect('/')
-                        
-                    });
-                } else {
-                    con.query(`INSERT INTO downloads (id, user, url, amount, name) VALUE  ('${id}', '${user.folder}', '${name}', '0', '${file.name}')`)
-                    // res.redirect('/')
+        try {
+            if(!req.files) {
+                res.status(400).send({
+                    status: 400,
+                    message: 'No file uploaded'
+                });
+            } else {
+                if (!req.body.password){
+                    req.body.password = null
                 }
-
-                //send response
-                
-            })
+                let file = req.files.file;
+                let key = await keyGenerator();
+                let name = `${key}-${file.name.replaceAll('"', '').replaceAll('`', '').replaceAll("'", "")}`
+                if(!fs.existsSync(`./downloads/${user.folder}`)) {
+                    fs.mkdirSync(`./downloads/${user.folder}`, { recursive: true });
+                };
+                await file.mv(`./downloads/${user.folder}/${name}`);
+                await con.query(`SELECT * FROM downloads WHERE user="${user.folder}"`, async function(err, sql){
+                    let id = sql.length + 1;
+                    if (req.body.password !== null) {
+                        await bcrypt.hash(req.body.password, 10, async (err, hash) => {
+                            await con.query(`INSERT INTO downloads (id, user, url, amount, name, password) VALUE  ('${id}', '${user.folder}', '${name}', '0', '${file.name.replaceAll('"', '').replaceAll('`', '').replaceAll("'", "")}', '${hash}')`, async (err, row) => {
+                                if(err) throw err;
+                            });
+                        });
+                    } else {
+                        await con.query(`INSERT INTO downloads (id, user, url, amount, name) VALUE  ('${id}', '${user.folder}', '${name}', '0', '${file.name.replaceAll('"', '').replaceAll('`', '').replaceAll("'", "")}')`, async (err, row) => {
+                            if(err) throw err;
+                        });
+                    };
+                });
+                return res.redirect('/');
+            }
+        } catch (err) {
+            throw err;
         }
-    } catch (err) {
-        // res.status(500).send(err);
-        throw err;
-    }
-
-})
+    });
 });
 
 app.get('/download/:folder/:url', async (req, res) => {
     let loggedIn = await backend.loggedIn(req);
-    let url = req.params.url
-    let folder = req.params.folder
+    let url = req.params.url.replaceAll('"', '').replaceAll('`', '').replaceAll("'", "")
+    let folder = req.params.folder.replaceAll('"', '').replaceAll('`', '').replaceAll("'", "")
 
-    await con.query(`SELECT * FROM downloads WHERE  url='${url}'`, function(err, sql){
+    await con.query(`SELECT * FROM downloads WHERE url='${url}'`, function(err, sql){
         if (err) throw err
         if (!sql[0]) return res.redirect('/dashboard')
         if (sql[0].password) {
-            res.render('pass', { backend: backend, config: config, con: con, loggedIn: loggedIn,  name: sql[0].name, id: url, folder: folder})
+            res.render('pass', { backend: backend, config: config, con: con, loggedIn: loggedIn,  name: sql[0].name, id: url, folder: folder, msg: "" })
         } else {
-        // console.log(sql)
-        let num = sql[0].amount + 1;
-        con.query(`UPDATE downloads SET amount = '${num}' WHERE id=('${sql[0].id}')`)
-        res.download(`./downloads/${folder}/${url}`, sql[0].name)
-        // res.redirect('/dashboard')
+            let num = sql[0].amount + 1;
+            con.query(`UPDATE downloads SET amount = '${num}' WHERE id=('${sql[0].id}')`, async (err, row) => {
+                if(err) throw err;
+            });
+            res.download(`./downloads/${folder}/${url}`, sql[0].name)
         }
+    });
+});
 
-
-    })
-})
-
-app.post('/pass/download', async (req, res) => {
-    let url = req.body.id
-    let folder = req.body.folder
-
-    // console.log(req.params)//   params: { url: 'CuJGx_t06t-transcript-985011818240032778.html' },
+app.post('/pass/download/:folder/:url', async (req, res) => {
+    let url = req.body.id.replaceAll('"', '').replaceAll('`', '').replaceAll("'", "")
+    let folder = req.body.folder.replaceAll('"', '').replaceAll('`', '').replaceAll("'", "")
     await con.query(`SELECT * FROM downloads WHERE  url='${url}'`, function(err, sql){
         if (err) throw err
-
-        if (!sql[0]) {
-            res.redirect('/')
-        }
-
+        if (!sql[0]) return res.redirect('/');
         if (sql[0].password) {
-            bcrypt.compare(req.body.password, sql[0].password, function(error, response) {
+            bcrypt.compare(req.body.password, sql[0].password, async function(error, response) {
                 // response == true if they match
                 // response == false if password is wrong
-                if (response == false) return res.status(403)
-                let num = sql[0].amount + 1;
-                con.query(`UPDATE downloads SET amount = '${num}' WHERE id=('${sql[0].id}')`)
-                res.download(`./downloads/${folder}/${url}`, sql[0].name)
+                if (response == false) {
+                    let loggedIn = await backend.loggedIn(req);
+                    let url = req.params.url.replaceAll('"', '').replaceAll('`', '').replaceAll("'", "")
+                    let folder = req.params.folder.replaceAll('"', '').replaceAll('`', '').replaceAll("'", "")
+                    await con.query(`SELECT * FROM downloads WHERE url='${url}'`, function(err, sql){
+                        if (err) throw err
+                        res.render('pass', { backend: backend, config: config, con: con, loggedIn: loggedIn, name: sql[0].name, id: url, folder: folder, msg: "Invalid password provided..." })
+                    });
+                } else {
+                    let num = sql[0].amount + 1;
+                    con.query(`UPDATE downloads SET amount = '${num}' WHERE id=('${sql[0].id}')`, async (err, row) => {
+                        if(err) throw err;
+                    });
+                    res.download(`./downloads/${folder}/${url}`, sql[0].name)
+                };
             });
-
-            
-        // console.log(sql)
-        }
-
-
-    })
-})
+        };
+    });
+});
 
 app.post('/upload', upload.single('sharex'), async function(req, res) {
     let fileId = await backend.makeId(config.fileNameLength);
