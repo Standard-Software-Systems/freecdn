@@ -118,6 +118,34 @@ app.get('', async (req, res) => {
 });
 
 
+app.get('/backend/config/download/:userid/:secret', async function(req, res) {
+    let userid = req?.params?.userid
+    let secret = req?.params?.secret
+    let configjson = {
+        
+            "Version": "14.1.0",
+            "Name": "FreeCDN",
+            "DestinationType": "ImageUploader, FileUploader",
+            "RequestMethod": "POST",
+            "RequestURL": "https://freecdn.lol/upload",
+            "Body": "MultipartFormData",
+            "Arguments": {
+              "userid": userid,
+              "secret": secret
+            },
+            "FileFormName": "sharex",
+            "URL": "{json:url}"
+        }
+    
+    fs.writeFileSync(`./public/u/FreeCDN.sxcu`, JSON.stringify(configjson));
+    await res.download(`./public/u/FreeCDN.sxcu`, 'FreeCDN.sxcu')
+    setTimeout(() => {
+        fs.unlink('./public/u/FreeCDN.sxcu', function (err) {
+            if (err) throw err;
+        });    
+    }, 5000);
+    })
+
 app.get('/upload/file', async function(req, res) {
     let loggedIn = await backend.loggedIn(req);
     // let u = await backend.fetchUser(row[0].userid);

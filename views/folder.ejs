@@ -71,6 +71,7 @@
                         </form>
                         <br>
                         <p class="text-center text-white secret" id="token"><%= secret %></p>
+                        <a class="btn btn-info" style="margin-bottom: 5px;" href="/backend/config/download/<%= user.id %>/<%= secret %>">Download ShareX Config</a>
                         <a class="btn btn-danger" href="/backend/secret/reset/<%= user.id %>">Reset Secret</a>
                         <button class="btn btn-primary" onClick="copyClip()">Copy Secret</button>
                     </div>
@@ -220,6 +221,10 @@
             /* Alert the copied text */
             alert("Link copied to clipboard!");
         };
+        function downloadShareXConfig(userid) {
+            var secret = document.getElementById("token").textContent;
+            
+        }
     </script>
 
 </body>
