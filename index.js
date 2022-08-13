@@ -180,13 +180,13 @@ app.get('/backend/config/download/:userid/:secret', async function(req, res) {
             "DestinationType": "ImageUploader, FileUploader",
             "RequestMethod": "POST",
             "RequestURL": `${config.domain}/upload`,
-            "Body": "MultipartFormData",
-            "Arguments": {
-              "userid": userid,
-              "secret": secret
-            },
-            "FileFormName": "sharex",
-            "URL": "{json:url}"
+            "Headers": {
+                "userid": userid,
+                "secret": secret
+              },            
+              "Body": "MultipartFormData",
+              "FileFormName": "sharex",
+              "URL": "{json:url}"
         }
     
     fs.writeFileSync(`./public/u/FreeCDN.sxcu`, JSON.stringify(configjson));
