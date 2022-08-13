@@ -86,14 +86,13 @@ app.use(express.static('public'));
 app.use(express.json());
 app.use(cookieParser())
 app.use(bodyParser.urlencoded({
-    extended: true
+  extended: true
 }));
 app.use('/css', express.static(__dirname + 'public/css'))
 app.use('/js', express.static(__dirname + 'public/js'))
 app.use('/u', express.static(__dirname + 'public/u'))
 app.use('/assets', express.static(__dirname + 'public/assets'))
 app.use(fileUpload());
-
 
 // Set View's
 app.set('views', './views');
@@ -117,6 +116,59 @@ app.get('', async (req, res) => {
     });
 });
 
+app.post('/upload', upload.single('sharex'), async function(req, res) {
+    let fileId = await backend.makeId(config.fileNameLength);
+    let secret = req?.headers?.secret;
+    secret = secret?.replaceAll('`', '');
+    secret = secret?.replaceAll('"', '');
+    secret = secret?.replaceAll(`\'`, ``);
+    let userid = req?.headers?.userid;
+    userid = userid?.replaceAll('`', '');
+    userid = userid?.replaceAll('"', '');
+    userid = userid?.replaceAll(`\'`, ``);
+    if(!secret) return res.send('No secret provided in header params of ShareX!');
+    if(!userid) return res.send('No userid provided in header params of ShareX!');
+    await con.query(`SELECT * FROM users WHERE secret="${secret}" AND userid="${userid}"`, async (err, row) => {
+        if(err) throw err;
+        let webURL = row[0]?.webhook;
+        if(!row[0]) {
+            let json_ = {
+                status: "UNAUTHORIZED",
+                errormsg: "You did not provide a valid secret or userid!",
+                url: `[ShareX] Upload failed...`
+            };
+            return res.type('json').send(JSON.stringify(json_, null, 4) + '\n');
+        }
+        let user = row[0];
+        let notExceeding = await backend.dirSize(`./public/u/${user.folder}`, { returnFinal: false });
+        if(!notExceeding) {
+            let json_ = {
+                status: "FOLDER SIZE EXCEEDED",
+                errormsg: "Folder size limit reached. This is configurable in the config file if you are the owner of this service.",
+                url: `[ShareX] Upload failed, your folder limit has been reached! Please delete some images to make more space!`
+            };
+            return res.type('json').send(JSON.stringify(json_, null, 4) + '\n');
+        };
+        let file = req.files.sharex;
+        if(file) {
+            let nameExt = file.name.substr(file.name.lastIndexOf('.') + 1);
+            fs.writeFileSync(`${path.dirname(require.main.filename)}/public/u/${user.folder}/${fileId}.${nameExt}`, file.data);
+            let json_ = {
+                status: "OK",
+                errormsg: "",
+                url: `${d}u/${user.folder}/${fileId}.${nameExt}`
+            };
+            res.type('json').send(JSON.stringify(json_, null, 4) + '\n');
+            await backend.webhook({ userid: userid, link: `${d}u/${user.folder}/${fileId}.${nameExt}`, webhook: webURL });
+            await con.query(`INSERT INTO images (userid, fileid, filename) VALUES ("${userid}", "${fileId}", "${fileId}.${nameExt}")`, async (err, row) => {
+                if(err) throw err;
+            });
+        } else {
+            res.send('No post data recieved')
+            if(config.debugmode) console.log('No post data recieved');
+        };
+    });
+});
 
 app.get('/backend/config/download/:userid/:secret', async function(req, res) {
     let userid = req?.params?.userid
@@ -144,7 +196,7 @@ app.get('/backend/config/download/:userid/:secret', async function(req, res) {
             if (err) throw err;
         });    
     }, 5000);
-    })
+});
 
 app.get('/upload/file', async function(req, res) {
     let loggedIn = await backend.loggedIn(req);
@@ -254,68 +306,20 @@ app.post('/pass/download/:folder/:url', async (req, res) => {
     });
 });
 
-app.post('/upload', upload.single('sharex'), async function(req, res) {
-    let fileId = await backend.makeId(config.fileNameLength);
-    let secret = req?.body?.secret;
-    secret = secret?.replaceAll('`', '');
-    secret = secret?.replaceAll('"', '');
-    secret = secret?.replaceAll(`\'`, ``);
-    let userid = req?.body?.userid;
-    userid = userid?.replaceAll('`', '');
-    userid = userid?.replaceAll('"', '');
-    userid = userid?.replaceAll(`\'`, ``);
-    if(!secret) return res.send('No secret provided in body params of ShareX!');
-    if(!userid) return res.send('No userid provided in body params of ShareX!');
-    await con.query(`SELECT * FROM users WHERE secret="${secret}" AND userid="${userid}"`, async (err, row) => {
-        if(err) throw err;
-        let webURL = row[0].webhook;
-        if(!row[0]) {
-            let json_ = {
-                status: "UNAUTHORIZED",
-                errormsg: "You did not provide a valid secret or userid!",
-                url: `[ShareX] Upload failed...`
-            };
-            return res.type('json').send(JSON.stringify(json_, null, 4) + '\n');
-        }
-        let user = row[0];
-        let notExceeding = await backend.dirSize(`./public/u/${user.folder}`, { returnFinal: false });
-        if(!notExceeding) {
-            let json_ = {
-                status: "FOLDER SIZE EXCEEDED",
-                errormsg: "Folder size limit reached. This is configurable in the config file if you are the owner of this service.",
-                url: `[ShareX] Upload failed, your folder limit has been reached! Please delete some images to make more space!`
-            };
-            return res.type('json').send(JSON.stringify(json_, null, 4) + '\n');
-        };
-        let file = req.file;
-        if(file) {
-            let nameExt = file.originalname.substr(file.originalname.lastIndexOf('.') + 1);
-            fs.writeFileSync(`${path.dirname(require.main.filename)}/public/u/${user.folder}/${fileId}.${nameExt}`, file.buffer);
-            let json_ = {
-                status: "OK",
-                errormsg: "",
-                url: `${d}u/${user.folder}/${fileId}.${nameExt}`
-            };
-            res.type('json').send(JSON.stringify(json_, null, 4) + '\n');
-            await backend.webhook({ userid: userid, link: `${d}u/${user.folder}/${fileId}.${nameExt}`, webhook: webURL });
-            await con.query(`INSERT INTO images (userid, fileid, filename) VALUES ("${userid}", "${fileId}", "${fileId}.${nameExt}")`, async (err, row) => {
-                if(err) throw err;
-            });
-
-        } else {
-            res.send('No post data recieved')
-            if(config.debugmode) console.log('No post data recieved');
-        };
-    });
-});
-
 app.get('/logout', async (req, res) => {
     res.clearCookie('connect')
-    await con.query(`SELECT COUNT(*) as total FROM images`, async (err, row) => {
+    await con.query(`SELECT * FROM images`, async (err, row) => {
         if(err) throw err;
-        let c = row[0]?.total || 0;
-        c = c.toLocaleString();
-        res.render('index.ejs', { backend: backend, config: config, con: con, count: c, loggedIn: false })
+        let c = row.length || 0;
+        await con.query(`SELECT * FROM users`, async (err, row) => {
+            if(err) throw err;
+            let u = row.length || 0;
+            await con.query(`SELECT * FROM downloads`, async (err, row) => {
+                if(err) throw err;
+                let d = row.length || 0;
+                res.render('index.ejs', { backend: backend, config: config, con: con, count: c, users: u, loggedIn: false, downloads: d})
+            });
+        });
     });
 });
 
@@ -387,7 +391,7 @@ app.post('/backend/update/folder/:userid', async function(req, res) {
                     req.body.input = req.body.input.replaceAll(`${char}`, ``)
                 };
                 if(fs.existsSync(`./public/u/${req.body.input}`)) {
-                    res.render('error.ejs', { error: `Folder already exists...` })
+                    res.render('error.ejs', { config: config, error: `Folder already exists...` })
                 };
                 fs.renameSync(`./public/u/${user.folder}`, `./public/u/${req.body.input}`);
                 await con.query(`UPDATE users SET folder="${req.body.input}" WHERE userid="${user.userid}"`, async function(err, row) {
