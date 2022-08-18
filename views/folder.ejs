@@ -46,35 +46,37 @@
                         <h5 class="card-title text-center"><%= user.username %> Image Count</h5>
                         <p class="card-text text-center"><%= count.toLocaleString() %></p>
                     </div>
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-center">Options</h5>
-                        <form method="post" action="/backend/update/folder/<%= user.id %>">
-                            <div class="row">
-                                <div class="col">
-                                    <input type="text" class="form-control" name="input" placeholder="Folder" value="<%= folder.replaceAll('/', '').replace('u', '') %>" required>
+                    <% if(isMyFolder) { %>
+                        <div class="card-body text-center">
+                            <h5 class="card-title text-center">Options</h5>
+                            <form method="post" action="/backend/update/folder/<%= user.id %>">
+                                <div class="row">
+                                    <div class="col">
+                                        <input type="text" class="form-control" name="input" placeholder="Folder" value="<%= folder.replaceAll('/', '').replace('u', '') %>" required>
+                                    </div>
+                                    <div class="col">
+                                        <button type="submit" class="btn btn-primary">Save Folder</button>
+                                    </div>
                                 </div>
-                                <div class="col">
-                                    <button type="submit" class="btn btn-primary">Save Folder</button>
+                            </form>
+                            <br>
+                            <form method="post" action="/backend/update/webhook/<%= user.id %>">
+                                <div class="row">
+                                    <div class="col">
+                                        <input type="password" class="form-control" name="input" placeholder="Webhook URL" value="<%= webhook %>">
+                                    </div>
+                                    <div class="col">
+                                        <button type="submit" class="btn btn-warning">Save Webhook</button>
+                                    </div>
                                 </div>
-                            </div>
-                        </form>
-                        <br>
-                        <form method="post" action="/backend/update/webhook/<%= user.id %>">
-                            <div class="row">
-                                <div class="col">
-                                    <input type="password" class="form-control" name="input" placeholder="Webhook URL" value="<%= webhook %>">
-                                </div>
-                                <div class="col">
-                                    <button type="submit" class="btn btn-warning">Save Webhook</button>
-                                </div>
-                            </div>
-                        </form>
-                        <br>
-                        <p class="text-center text-white secret" id="token"><%= secret %></p>
-                        <a class="btn btn-info" style="margin-bottom: 5px;" href="/backend/config/download/<%= user.id %>/<%= secret %>">Download ShareX Config</a>
-                        <a class="btn btn-danger" href="/backend/secret/reset/<%= user.id %>">Reset Secret</a>
-                        <button class="btn btn-primary" onClick="copyClip()">Copy Secret</button>
-                    </div>
+                            </form>
+                            <br>
+                            <p class="text-center text-white secret" id="token"><%= secret %></p>
+                            <a class="btn btn-info" style="margin-bottom: 5px;" href="/backend/config/download/<%= user.id %>/<%= secret %>">Download ShareX Config</a>
+                            <a class="btn btn-danger" href="/backend/secret/reset/<%= user.id %>">Reset Secret</a>
+                            <button class="btn btn-primary" onClick="copyClip()">Copy Secret</button>
+                        </div>
+                    <% } %>
                 </div>
             </div>
         </div>
