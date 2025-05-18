@@ -1,4 +1,4 @@
-<% 
+<%
     let image1 = images[0];
     let image2 = images[1];
     let image3 = images[2];
@@ -24,15 +24,15 @@
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Exo:500,500italic,700,700italic,400,400italic,600,600italic,900,900italic">
     <link rel="shortcut icon" href="/assets/logo.png">
     <link rel="stylesheet" href="css/main.css">
-    <title><%= user.tag %>'s Drive</title>
+    <title><%= user.username %>'s Drive</title>
 </head>
 <body>
-    <h1 style="font-size: 2em;">You're viewing <a href="https://discord.com/users/<%= user.id %>"><%= user.tag %></a>'s Drive</h1>
+    <h1 style="font-size: 2em;">You're viewing <a href="https://discord.com/users/<%= user.id %>"><%= user.username %></a>'s Drive</h1>
     <br>
     <div class="container">
         <div class="justify-content-center mx-auto">
             <div class="col d-block mb-3 mx-auto">
-                <div class="card text-white bg-primary mx-auto" style="max-width: 18rem;">
+                <div class="card text-white bg-primary mx-auto" style="max-width: 150rem;">
                     <% if(notExceeding) { %>
                         <div class="card-body bg-dark">
                         <p class="card-text text-center"><%= currentUsed.toLocaleString() %> / <%= config.maxFolderSize.toLocaleString() %> MB</p>
@@ -48,29 +48,84 @@
                     </div>
                     <% if(isMyFolder) { %>
                         <div class="card-body text-center">
-                            <h5 class="card-title text-center">Options</h5>
+                            <h4 class="card-title text-center">User Options</h4>
                             <form method="post" action="/backend/update/folder/<%= user.id %>">
                                 <div class="row">
                                     <div class="col">
                                         <input type="text" class="form-control" name="input" placeholder="Folder" value="<%= folder.replaceAll('/', '').replace('u', '') %>" required>
                                     </div>
+                                </div>
+                                <div class="row">
                                     <div class="col">
                                         <button type="submit" class="btn btn-primary">Save Folder</button>
                                     </div>
                                 </div>
                             </form>
                             <br>
+                            <h4 class="card-title text-center">Embed Options</h4>
+                            <form method="post" action="/backend/update/settings/<%= user.id %>">
+                                <div class="row">
+                                    <div class="col">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="1" id="embedImage" name="embed" <%= embedSettings.embed ? 'checked' : '' %>>
+                                            <label class="form-check-label" for="embedImage">Embed Image</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col">
+                                        <label for="embedTitle">Embed Title</label>
+                                        <input type="text" class="form-control" id="embedTitle" name="embedTitle" value="<%= embedSettings.embedTitle || '' %>">
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col">
+                                        <label for="embedDescription">Embed Description</label>
+                                        <textarea class="form-control" id="embedDescription" name="embedDescription"><%= embedSettings.embedDescription || '' %></textarea>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col">
+                                        <label for="embedFooter">Embed Footer</label>
+                                        <input type="text" class="form-control" id="embedFooter" name="embedFooter" value="<%= embedSettings.embedFooter || '' %>">
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col">
+                                        <label for="embedColor">Embed Color</label>
+                                        <input type="color" class="form-control" id="embedColor" name="embedColor" value="<%= embedSettings.embedColor || '#000000' %>">
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="1" id="embedTimestamp" name="embedTimestamp" <%= embedSettings.embedTimestamp ? 'checked' : '' %>>
+                                            <label class="form-check-label" for="embedTimestamp">Include Timestamp</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col">
+                                        <button type="submit" class="btn btn-primary">Save Embed</button>
+                                    </div>
+                                </div>
+                            </form>
+                            <br>
+                            <h4 class="card-title text-center">Webhook Options</h4>
                             <form method="post" action="/backend/update/webhook/<%= user.id %>">
                                 <div class="row">
                                     <div class="col">
                                         <input type="password" class="form-control" name="input" placeholder="Webhook URL" value="<%= webhook %>">
                                     </div>
+                                </div>
+                                <div class="row">
                                     <div class="col">
-                                        <button type="submit" class="btn btn-warning">Save Webhook</button>
+                                        <button type="submit" class="btn btn-primary">Save Webhook</button>
                                     </div>
                                 </div>
                             </form>
                             <br>
+                            <h4 class="card-title text-center">ShareX Config</h4>
                             <p class="text-center text-white secret" id="token"><%= secret %></p>
                             <a class="btn btn-info" style="margin-bottom: 5px;" href="/backend/config/download/<%= user.id %>/<%= secret %>">Download ShareX Config</a>
                             <a class="btn btn-danger" href="/backend/secret/reset/<%= user.id %>">Reset Secret</a>
@@ -92,11 +147,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <% let num = 0 %> 
-                    <% sql.forEach(function (data){ num = num + 1%> 
+                    <% let num = 0 %>
+                    <% sql.forEach(function (data){ num = num + 1%>
                     <tr class="downloads">
                         <td><%= data.name %> </td>
-                        <td><a href="<%= config.domain %>/download/<%= folder %>/<%= data.url %>">Download</a> (<button class="btn-primary" onClick="copyLink(<%= num %>)">Copy Link</button>)<p id="link-<%= num %>" hidden><%= config.domain %>/download/<%= folder %>/<%= data.url %></p></td>
+                        <td><a href="<%= config.domain %>/download/<%= folderUrl %>/<%= data.url %>">Download</a> (<button class="btn-primary" onClick="copyLink(<%= num %>)">Copy Link</button>)<p id="link-<%= num %>" hidden><%= config.domain %>/download/<%= folder %>/<%= data.url %></p></td>
                         <td><%= data.amount %> </td>
                     </tr>
                     <% }) %>
@@ -109,17 +164,17 @@
                     <div class="col">
                         <% if(image1) { %>
                             <div class="card bg-dark imgcard">
-                                <img src="<%= folder + image1.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                <img src="<%= folderUrl + image1.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
                                 <div class="card-body">
-                                    <a href="<%= folder + image1.filename %>" class="btn btn-primary" target="_blank">View Image</a>
+                                    <a href="<%= folderUrl + image1.filename %>" class="btn btn-primary" target="_blank">View Image</a>
                                     <a href="/backend/delete/<%= user.id %>/<%= image1.filename %>" class="btn btn-danger" >Remove</a>
                                 </div>
                             </div>
                         <% } else { %>
                             <div class="card bg-dark imgcard">
-                                <img src="<%= folder %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                <img src="<%= folderUrl %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
                                 <div class="card-body">
-                                    <a href="<%= folder %>" class="btn btn-primary" target="_blank">View Image</a>
+                                    <a href="<%= folderUrl %>" class="btn btn-primary" target="_blank">View Image</a>
                                     <a href="/backend/delete/<%= user.id %>/<%= img.filename %>" class="btn btn-danger" >Remove</a>
                                 </div>
                             </div>
@@ -127,9 +182,9 @@
                         <% if(images[0]) { %>
                             <% images[0].forEach((img) => { %>
                                 <div class="card bg-dark imgcard" >
-                                    <img src="<%= folder + img.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                    <img src="<%= folderUrl + img.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
                                     <div class="card-body">
-                                        <a href="<%= folder + img.filename %>" class="btn btn-primary" target="_blank">View Image</a>
+                                        <a href="<%= folderUrl + img.filename %>" class="btn btn-primary" target="_blank">View Image</a>
                                         <a href="/backend/delete/<%= user.id %>/<%= img.filename %>" class="btn btn-danger" >Remove</a>
                                     </div>
                                 </div>
@@ -139,7 +194,7 @@
                     <div class="col">
                         <% if(image2) { %>
                             <div class="card bg-dark imgcard">
-                                <img src="<%= folder + image2.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                <img src="<%= folderUrl + image2.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
                                 <div class="card-body">
                                     <a href="<%= folder + image2.filename %>" class="btn btn-primary" target="_blank">View Image</a>
                                     <a href="/backend/delete/<%= user.id %>/<%= image2.filename %>" class="btn btn-danger" >Remove</a>
@@ -147,9 +202,9 @@
                             </div>
                         <% } else { %>
                             <div class="card bg-dark imgcard">
-                                <img src="<%= folder %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                <img src="<%= folderUrl %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
                                 <div class="card-body">
-                                    <a href="<%= folder %>" class="btn btn-primary" target="_blank">View Image</a>
+                                    <a href="<%= folderUrl %>" class="btn btn-primary" target="_blank">View Image</a>
                                     <a href="/backend/delete/<%= user.id %>/<%= img.filename %>" class="btn btn-danger" >Remove</a>
                                 </div>
                             </div>
@@ -157,9 +212,9 @@
                         <% if(images[1]) { %>
                             <% images[1].forEach((img) => { %>
                                 <div class="card bg-dark imgcard" >
-                                    <img src="<%= folder + img.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                    <img src="<%= folderUrl + img.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
                                     <div class="card-body">
-                                        <a href="<%= folder + img.filename %>" class="btn btn-primary" target="_blank">View Image</a>
+                                        <a href="<%= folderUrl + img.filename %>" class="btn btn-primary" target="_blank">View Image</a>
                                         <a href="/backend/delete/<%= user.id %>/<%= img.filename %>" class="btn btn-danger" >Remove</a>
                                     </div>
                                 </div>
@@ -169,17 +224,17 @@
                     <div class="col">
                         <% if(image3) { %>
                             <div class="card bg-dark imgcard">
-                                <img src="<%= folder + image3.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                <img src="<%= folderUrl + image3.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
                                 <div class="card-body">
-                                    <a href="<%= folder + image3.filename %>" class="btn btn-primary" target="_blank">View Image</a>
+                                    <a href="<%= folderUrl + image3.filename %>" class="btn btn-primary" target="_blank">View Image</a>
                                     <a href="/backend/delete/<%= user.id %>/<%= image3.filename %>" class="btn btn-danger" >Remove</a>
                                 </div>
                             </div>
                         <% } else { %>
                             <div class="card bg-dark imgcard">
-                                <img src="<%= folder %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                <img src="<%= folderUrl %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
                                 <div class="card-body">
-                                    <a href="<%= folder %>" class="btn btn-primary" target="_blank">View Image</a>
+                                    <a href="<%= folderUrl %>" class="btn btn-primary" target="_blank">View Image</a>
                                     <a href="/backend/delete/<%= user.id %>/<%= image3.filename %>" class="btn btn-danger" >Remove</a>
                                 </div>
                             </div>
@@ -187,9 +242,9 @@
                         <% if(images[2]) { %>
                             <% images[2].forEach((img) => { %>
                                 <div class="card bg-dark imgcard" >
-                                    <img src="<%= folder + img.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
+                                    <img src="<%= folderUrl + img.filename %>" class="card-img-top mx-auto" style="padding-top: 0.5em; width: 20em; height: 10em;" alt="Image could not be loaded...">
                                     <div class="card-body">
-                                        <a href="<%= folder + img.filename %>" class="btn btn-primary" target="_blank">View Image</a>
+                                        <a href="<%= folderUrl + img.filename %>" class="btn btn-primary" target="_blank">View Image</a>
                                         <a href="/backend/delete/<%= user.id %>/<%= img.filename %>" class="btn btn-danger" >Remove</a>
                                     </div>
                                 </div>
@@ -225,7 +280,7 @@
         };
         function downloadShareXConfig(userid) {
             var secret = document.getElementById("token").textContent;
-            
+
         }
     </script>
 
