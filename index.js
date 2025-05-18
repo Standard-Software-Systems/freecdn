@@ -126,12 +126,12 @@ app.post('/upload', upload.single('sharex'), async function(req, res) {
     userid = userid?.replaceAll('`', '');
     userid = userid?.replaceAll('"', '');
     userid = userid?.replaceAll(`\'`, ``);
-    if(!secret) return res.send('No secret provided in header params of ShareX!');
-    if(!userid) return res.send('No userid provided in header params of ShareX!');
+    if (!secret) return res.send('No secret provided in header params of ShareX!');
+    if (!userid) return res.send('No userid provided in header params of ShareX!');
     await con.query(`SELECT * FROM users WHERE secret="${secret}" AND userid="${userid}"`, async (err, row) => {
-        if(err) throw err;
+        if (err) throw err;
         let webURL = row[0]?.webhook;
-        if(!row[0]) {
+        if (!row[0]) {
             let json_ = {
                 status: "UNAUTHORIZED",
                 errormsg: "You did not provide a valid secret or userid!",
@@ -141,7 +141,7 @@ app.post('/upload', upload.single('sharex'), async function(req, res) {
         }
         let user = row[0];
         let notExceeding = await backend.dirSize(`./public/u/${user.folder}`, { returnFinal: false });
-        if(!notExceeding) {
+        if (!notExceeding) {
             let json_ = {
                 status: "FOLDER SIZE EXCEEDED",
                 errormsg: "Folder size limit reached. This is configurable in the config file if you are the owner of this service.",
@@ -150,22 +150,38 @@ app.post('/upload', upload.single('sharex'), async function(req, res) {
             return res.type('json').send(JSON.stringify(json_, null, 4) + '\n');
         };
         let file = req.files.sharex;
-        if(file) {
+        if (file) {
             let nameExt = file.name.substr(file.name.lastIndexOf('.') + 1);
             fs.writeFileSync(`${path.dirname(require.main.filename)}/public/u/${user.folder}/${fileId}.${nameExt}`, file.data);
-            let json_ = {
-                status: "OK",
-                errormsg: "",
-                url: `${d}u/${user.folder}/${fileId}.${nameExt}`
-            };
-            res.type('json').send(JSON.stringify(json_, null, 4) + '\n');
-            await backend.webhook({ userid: userid, link: `${d}u/${user.folder}/${fileId}.${nameExt}`, webhook: webURL });
+            let embedUrl = `${d}embed/${user.folder}/${fileId}.${nameExt}`;
+            let useEmbed = false;
+            if (row[0]?.embed == 1) {
+                useEmbed = true;
+            } else {
+                useEmbed = false;
+            }
+            if (!useEmbed) {
+                json_ = {
+                    status: "OK",
+                    errormsg: "",
+                    url: `${d}u/${user.folder}/${fileId}.${nameExt}`
+                };
+                res.type('json').send(JSON.stringify(json_, null, 4) + '\n');
+            } else {
+                json_ = {
+                    status: "OK",
+                    errormsg: "",
+                    url: embedUrl
+                };
+                res.type('json').send(JSON.stringify(json_, null, 4) + '\n');
+            }
+            await backend.webhook({ userid: userid, link: `${d}${user.folder}/${fileId}.${nameExt}`, webhook: webURL });
             await con.query(`INSERT INTO images (userid, fileid, filename) VALUES ("${userid}", "${fileId}", "${fileId}.${nameExt}")`, async (err, row) => {
-                if(err) throw err;
+                if (err) throw err;
             });
         } else {
-            res.send('No post data recieved')
-            if(config.debugmode) console.log('No post data recieved');
+            res.send('No post data received')
+            if (config.debugmode) console.log('No post data received');
         };
     });
 });
@@ -174,7 +190,7 @@ app.get('/backend/config/download/:userid/:secret', async function(req, res) {
     let userid = req?.params?.userid
     let secret = req?.params?.secret
     let configjson = {
-        
+
             "Version": "14.1.0",
             "Name": "FreeCDN",
             "DestinationType": "ImageUploader, FileUploader",
@@ -183,18 +199,18 @@ app.get('/backend/config/download/:userid/:secret', async function(req, res) {
             "Headers": {
                 "userid": userid,
                 "secret": secret
-              },            
+              },
               "Body": "MultipartFormData",
               "FileFormName": "sharex",
               "URL": "{json:url}"
         }
-    
+
     fs.writeFileSync(`./public/u/FreeCDN.sxcu`, JSON.stringify(configjson));
     await res.download(`./public/u/FreeCDN.sxcu`, 'FreeCDN.sxcu')
     setTimeout(() => {
         fs.unlink('./public/u/FreeCDN.sxcu', function (err) {
             if (err) throw err;
-        });    
+        });
     }, 5000);
 });
 
@@ -407,6 +423,41 @@ app.post('/backend/update/folder/:userid', async function(req, res) {
     };
 });
 
+app.post('/backend/update/settings/:userid', async function(req, res) {
+    let loggedIn = await backend.loggedIn(req);
+    if (loggedIn) {
+        let cookie = req?.cookies?.connect;
+        await con.query(`SELECT * FROM users WHERE cookie="${cookie}"`, async (err, row) => {
+            if (err) throw err;
+            let user = row[0];
+            if (req.params.userid == user.userid) {
+                let embed = req.body.embed ? 1 : 0;
+                let embedTitle = req.body.embedTitle || '';
+                let embedDescription = req.body.embedDescription || '';
+                let embedFooter = req.body.embedFooter || '';
+                let embedColor = req.body.embedColor || '#000000';
+                let embedTimestamp = req.body.embedTimestamp ? 1 : 0;
+
+                await con.query(`UPDATE users SET
+                    embed=${embed},
+                    embedTitle="${embedTitle}",
+                    embedDescription="${embedDescription}",
+                    embedFooter="${embedFooter}",
+                    embedColor="${embedColor}",
+                    embedTimestamp=${embedTimestamp}
+                    WHERE userid="${user.userid}"`, async function(err, row) {
+                    if (err) throw err;
+                    return res.redirect('/backend/folderfind');
+                });
+            } else {
+                return res.redirect('/backend/folderfind');
+            }
+        });
+    } else {
+        return res.redirect('/');
+    }
+});
+
 app.post('/backend/update/webhook/:userid', async function(req, res) {
     let loggedIn = await backend.loggedIn(req);
     if(loggedIn) {
@@ -516,7 +567,15 @@ app.get('/:folder', async function (req, res) {
                 let usedUp = await backend.dirSize(`./public/u/${folder}`, { returnFinal: true });
                 let hmmm = await backend.dirSize(`./public/u/${folder}`, { returnFinal: false });
                 let f = `u/${folder}/`
-                res.render('folder.ejs', { backend: backend, config: config, con: con, secret: usercon.secret, count: bruh, user: u, currentUsed: usedUp, notExceeding: hmmm, loggedIn: loggedIn, images: images.reverse(), isMyFolder: isMyFolder, folder: f, webhook: usercon.webhook, sql: sql, folder: folder })
+                let embedSettings = {
+                    embed: usercon.embed,
+                    embedTitle: usercon.embedTitle,
+                    embedDescription: usercon.embedDescription,
+                    embedFooter: usercon.embedFooter,
+                    embedColor: usercon.embedColor,
+                    embedTimestamp: usercon.embedTimestamp
+                }
+                res.render('folder.ejs', { backend: backend, config: config, con: con, secret: usercon.secret, count: bruh, user: u, currentUsed: usedUp, notExceeding: hmmm, loggedIn: loggedIn, images: images.reverse(), isMyFolder: isMyFolder, folder: f, folderUrl: f, webhook: usercon.webhook, sql: sql, folder: folder, embedSettings: embedSettings })
             });
         });
         });
@@ -524,6 +583,33 @@ app.get('/:folder', async function (req, res) {
         res.redirect('/')
     };
 });
+
+app.get('/embed/:folder/:file', async (req, res) => {
+    let folder = req.params.folder;
+    let file = req.params.file;
+    await con.query(`SELECT * FROM users WHERE folder='${folder}'`, async (err, row) => {
+        if (err) throw err;
+        if (row.length > 0 && fs.existsSync(`./public/u/${folder}/${file}`)) {
+            let user = row[0];
+            let imageUrl = `${d}u/${folder}/${file}`;
+            let u = await backend.fetchUser(row[0].userid);
+            res.render('embed', {
+                title: user.embedTitle || 'FreeCDN Image Uploader',
+                description: user.embedDescription || 'FreeCDN is an open-source image sharing server that allows you to upload screenshots quickly, it was created by Standard Software Systems!',
+                imageUrl: imageUrl,
+                url: imageUrl,
+                thumbnail: config.seoSettings.imageURL,
+                footer: user.embedFooter || 'FreeCDN Image Uploader',
+                color: user.embedColor || '#000000',
+                timestamp: user.embedTimestamp === 1,
+                username: u.username
+            });
+        } else {
+            res.redirect('/404');
+        }
+    });
+});
+
 
 // MAKE SURE THIS IS LAST FOR 404 PAGE REDIRECT
 app.get('*', function(req, res){
@@ -536,7 +622,7 @@ logger.hypelogger(`FreeCDN`, '500', 'magenta', `Domain: ${chalk.magenta(config.d
 // Port Listening
 app.listen(config.port)
 
-process.on('unhandledRejection', function(err) { 
+process.on('unhandledRejection', function(err) {
     let ref = err.toString().toLowerCase();
     if(ref.includes('unlink')) return;
     console.log(chalk.red(`\nFATAL ERROR: \n\n`, err.stack))
